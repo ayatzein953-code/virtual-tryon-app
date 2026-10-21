@@ -1,0 +1,7 @@
+pycache/
+*.pyc
+venv/
+.env
+temp_*.jpg
+final_*.jpg
+.vscode/
