@@ -11,5 +11,11 @@ An interactive web-based Virtual Try-On application built with Python, Streamlit
 
 1. Clone the repository:
    `bash
-   git clone [https://github.com/YOUR_USERNAME/virtual-tryon-app.git](https://github.com/YOUR_USERNAME/virtual-tryon-app.git)
+   git clone [https://github.com/YOUR_USERNAME/virtual-tryon-app.git](https://github.com/ayatzein953-code/virtual-tryon-app.git)
    cd virtual-tryon-app
+2. Create a virtual environment & install dependencies
+   python -m venv venv
+   source venv/bin/activate  # On Windows use: venv\Scripts\activate
+   pip install -r requirements.txt
+3. Run the Streamlit app
+   streamlit run app.py
