@@ -1,49 +1,56 @@
-import streamlit as st
-from PIL import Image
 import os
+import streamlit as st
 from core_logic import process_virtual_tryon
 
-st.set_page_config(page_title="AI Virtual Try-On", layout="wide")
+# --- إعدادات الصفحة ---
+st.set_page_config(page_title="AI Virtual Try-On", layout="centered")
 
-st.title("👕 AI Virtual Try-On Studio")
-st.write("ارفع صورة الشخص وصورة الملابس لرؤية التغيير الافتراضي باستخدام الذكاء الاصطناعي!")
+st.title("👗 أداة القياس الافتراضي الذكية")
+st.write("قومي بررفع صورة الشخص وصورة الملابس المطلوبة، وسيتولى الذكاء الاصطناعي معالجتها بدقة!")
 
+# --- واجهة رفع الصور ---
 col1, col2 = st.columns(2)
-
 with col1:
-    st.subheader("1. صورة الشخص")
-    person_file = st.file_uploader("اختر صورة الشخص", type=["jpg", "jpeg", "png"], key="person")
-    if person_file:
-        st.image(person_file, caption="صورة الشخص المرفوعة", use_container_width=True)
-
+    person_file = st.file_uploader("1️⃣ صورة الشخص (Person):", type=['jpg', 'jpeg', 'png'])
 with col2:
-    st.subheader("2. صورة الملابس")
-    garment_file = st.file_uploader("اختر صورة الملابس", type=["jpg", "jpeg", "png"], key="garment")
-    if garment_file:
-        st.image(garment_file, caption="صورة الملابس المرفوعة", use_container_width=True)
+    garment_file = st.file_uploader("2️⃣ صورة الملابس (Garment):", type=['jpg', 'jpeg', 'png'])
 
-st.divider()
-
-if st.button("✨ تطبيق الملابس الآن", type="primary"):
-    if person_file and garment_file:
-        with st.spinner("جاري معالجة وتطابق الملابس... قد يستغرق الأمر بضع لحظات."):
-            # حفظ الصور مؤقتًا للتعامل معها
-            person_path = "temp_person.jpg"
-            garment_path = "temp_garment.jpg"
+# --- زر التنفيذ ---
+if st.button("🚀 ابدأ تجربة الملابس", type="primary"):
+    if person_file is not None and garment_file is not None:
+        
+        # حفظ الملفات المرفوعة مؤقتاً
+        person_path = f"temp_p_{person_file.name}"
+        garment_path = f"temp_g_{garment_file.name}"
+        
+        with open(person_path, "wb") as f:
+            f.write(person_file.getbuffer())
+        with open(garment_path, "wb") as f:
+            f.write(garment_file.getbuffer())
             
-            with open(person_path, "wb") as f:
-                f.write(person_file.getbuffer())
-            with open(garment_path, "wb") as f:
-                f.write(garment_file.getbuffer())
+        # استدعاء دالة المعالجة من ملف core_logic.py مع مؤشر انتظار
+        with st.spinner("⏳ جاري المعالجة وقياس الملابس بواسطة الذكاء الاصطناعي..."):
+            final_image_path = process_virtual_tryon(person_path, garment_path)
             
-            # تشغيل نموذج الذكاء الاصطناعي
-            result_path = process_virtual_tryon(person_path, garment_path, "final_result.jpg")
-            
-            if result_path and os.path.exists(result_path):
-                st.success("✅ تم دمج الملابس بنجاح!")
-                result_img = Image.open(result_path)
-                st.image(result_img, caption="النتيجة النهائية", use_container_width=True)
+            if final_image_path:
+                st.success("✨ تمت العملية بنجاح!")
+                st.image(final_image_path, caption="النتيجة النهائية للتجربة", use_container_width=True)
+                
+                # زر تنزيل الصورة الناتجة
+                with open(final_image_path, "rb") as file:
+                    st.download_button(
+                        label="📥 تحميل الصورة الناتجة",
+                        data=file,
+                        file_name="virtual_tryon_result.jpg",
+                        mime="image/jpeg"
+                    )
             else:
-                st.error("❌ حدث خطأ أثناء المعالجة أو أن السيرفر مشغول حالياً. يرجى المحاولة لاحقاً.")
+                st.error("❌ حدث خطأ أثناء المعالجة، يرجى المحاولة مرة أخرى.")
+        
+        # تنظيف الملفات المؤقتة من الجهاز
+        for p in [person_path, garment_path]:
+            if os.path.exists(p):
+                os.remove(p)
+                
     else:
-        st.warning("⚠️ يرجى رفع الصورتين أولاً قبل البدء.")
+        st.warning("⚠️ الرجاء رفع صورتي الشخص والملابس أولاً.")
