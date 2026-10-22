@@ -1,25 +1,25 @@
 import os
 from gradio_client import Client, handle_file
 from PIL import Image
+import uuid
+
+def get_temp_path(ext="jpg"):
+    """توليد مسار مؤقت فريد للصورة لمنع التداخل."""
+    return f"temp_{uuid.uuid4()}.{ext}"
 
 def process_virtual_tryon(person_img_path, garment_img_path, output_path="output.jpg"):
     """
-    تستقبل مسار صورة الشخص وصورة الملابس وترسل الطلب إلى نموذج الذكاء الاصطناعي.
+    المنطق الأساسي: استقبال مسار الشخص والملابس واستدعاء نموذج Kolors (أو Leffa) لمعالجة الدمج.
     """
     try:
-        # الاتصال بالسيرفر/النموذج
-        client = Client("yisol/IDM-VTON")
+        # الاتصال بالنموذج (يمكنك استبداله برابط مساحتك الخاصة لاحقاً)
+        client = Client("Kwai-Kolors/Kolors-Virtual-Try-On")
         
-        # إرسال البيانات للنموذج
         result = client.predict(
-            dict={"background": handle_file(person_img_path), "layers": [], "composite": None},
-            garm_img=handle_file(garment_img_path),
-            garment_des="A stylish outfit",
-            is_checked=True,
-            is_checked_crop=False,
-            denoise_steps=30,
+            person_image=handle_file(person_img_path),
+            garment_image=handle_file(garment_img_path),
             seed=42,
-            api_name="/tryon"
+            api_name="/infer"
         )
         
         if result:
@@ -27,8 +27,9 @@ def process_virtual_tryon(person_img_path, garment_img_path, output_path="output
             output_image = Image.open(output_filepath)
             output_image.save(output_path)
             return output_path
+            
         return None
 
     except Exception as e:
-        print(f"Error during processing: {e}")
+        print(f"Error in core logic: {e}")
         return None
